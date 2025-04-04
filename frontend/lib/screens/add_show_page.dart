@@ -31,7 +31,7 @@ class _AddShowPageState extends State<AddShowPage> {
   }
 
   Future<void> _addShow() async {
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
+    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty || _imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("All fields are required!")),
       );
@@ -44,7 +44,7 @@ class _AddShowPageState extends State<AddShowPage> {
     request.fields['title'] = _titleController.text;
     request.fields['description'] = _descriptionController.text;
     request.fields['category'] = _selectedCategory;
-    //request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
+    request.files.add(await http.MultipartFile.fromPath('image', _imageFile!.path));
 
     var response = await request.send();
     setState(() => _isUploading = false);
