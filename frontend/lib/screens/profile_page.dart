@@ -142,6 +142,7 @@ Widget profileItem(IconData icon, String title) {
     );
   }
 
+  //Update profile
 
 class UpdateProfileView extends StatefulWidget {
   const UpdateProfileView({super.key});
