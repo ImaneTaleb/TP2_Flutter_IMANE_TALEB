@@ -40,7 +40,10 @@ router.post('/', upload.single('image'), validateShow, (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
   const { title, description, category } = req.body;
-  const image = req.file ? `/uploads/${req.file.filename}` : null;
+  //const image = req.file ? `/uploads/${req.file.filename}` : null;
+  const image = req.file
+      ? `/uploads/${req.file.filename}`
+      : req.body.image || null;
 
   console.log(req.body);
   console.log(image);
