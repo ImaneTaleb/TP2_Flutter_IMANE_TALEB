@@ -121,7 +121,18 @@ class _HomePageState extends State<HomePage> {
             ListTile(
               leading: const Icon(Icons.add),
               title: const Text("Add Show"),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (builder)=> AddShowPage())),
+              //onTap: () => Navigator.push(context, MaterialPageRoute(builder: (builder)=> AddShowPage())),
+              onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (builder) => AddShowPage()),
+                );
+
+                if (result == true) {
+                  // Rafraîchir la liste des shows
+                  fetchShows();
+                }
+              },
             ),
           ],
         ),
@@ -186,15 +197,21 @@ class ShowList extends StatelessWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      // Naviguer vers la page de mise à jour avec l'id du show
-                      Navigator.push(
+                    onPressed: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => UpdateShowPage(showId: show['id']),
                         ),
                       );
+
+                      if (result == true) {
+                        // Trouve la méthode fetchShows dans le parent et l'appelle
+                        final homeState = context.findAncestorStateOfType<_HomePageState>();
+                        homeState?.fetchShows(); // Rafraîchir les shows après mise à jour
+                      }
                     },
+
                   ),
                   IconButton(
                     icon: const Icon(Icons.more_vert),

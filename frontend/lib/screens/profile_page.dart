@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,8 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        title: const Text("Profile", style: TextStyle(color: Colors.white),),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Profile", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blueAccent,
       ),
       body: _pages[_selectedIndex],
@@ -44,8 +45,30 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  String userName = '';
+  String userEmail = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('user_name') ?? 'Unknown';
+      userEmail = prefs.getString('user_email') ?? 'Unknown';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +81,14 @@ class ProfileView extends StatelessWidget {
             backgroundImage: NetworkImage('https://i.pravatar.cc/300'),
           ),
           const SizedBox(height: 20),
-          const Text(
-            "John Doe",
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          Text(
+            userName,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 5),
-          const Text(
-            "johndoe@email.com",
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+          Text(
+            userEmail,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
           const SizedBox(height: 20),
           Container(
@@ -76,10 +99,10 @@ class ProfileView extends StatelessWidget {
             ),
             child: Column(
               children: [
-                profileItem(Icons.movie, "My Shows"),
-                profileItem(Icons.favorite, "Favorites"),
-                profileItem(Icons.settings, "Settings"),
-                profileItem(Icons.logout, "Logout"),
+                _profileItem(Icons.movie, "My Shows"),
+                _profileItem(Icons.favorite, "Favorites"),
+                _profileItem(Icons.settings, "Settings"),
+                _profileItem(Icons.logout, "Logout"),
               ],
             ),
           ),
@@ -88,7 +111,29 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  Widget profileItem(IconData icon, String title) {
+  Widget _profileItem(IconData icon, String title) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.blueAccent),
+      title: Text(title),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      onTap: () {
+        if (title == "Logout") {
+          _logout();
+        }
+      },
+    );
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/login'); // Redirige vers la page login
+  }
+}
+
+
+Widget profileItem(IconData icon, String title) {
     return ListTile(
       leading: Icon(icon, color: Colors.blueAccent),
       title: Text(title),
@@ -96,7 +141,7 @@ class ProfileView extends StatelessWidget {
       onTap: () {},
     );
   }
-}
+
 
 class UpdateProfileView extends StatefulWidget {
   const UpdateProfileView({super.key});
@@ -112,8 +157,26 @@ class _UpdateProfileViewState extends State<UpdateProfileView> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = "John Doe";
-    _emailController.text = "johndoe@email.com";
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nameController.text = prefs.getString('user_name') ?? '';
+      _emailController.text = prefs.getString('user_email') ?? '';
+    });
+  }
+
+  Future<void> _saveUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', _nameController.text.trim());
+    await prefs.setString('user_email', _emailController.text.trim());
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Profile updated successfully!")),
+    );
   }
 
   @override
@@ -152,11 +215,7 @@ class _UpdateProfileViewState extends State<UpdateProfileView> {
               padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Profile updated successfully!")),
-              );
-            },
+            onPressed: _saveUserData,
             child: const Text("Save Changes", style: TextStyle(fontSize: 18)),
           ),
         ],
